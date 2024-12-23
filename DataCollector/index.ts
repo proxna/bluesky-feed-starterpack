@@ -35,16 +35,16 @@ function delay(ms: number) {
   return new Promise( resolve => setTimeout(resolve, ms) );
 }
 
-function saveTextToFile(text: string, classification: string, index: number) {
+function saveTextToFile(text: string, classification: string) {
   const folderName = path.join(__dirname, classification);
   
   if (!fs.existsSync(folderName)) {
     fs.mkdirSync(folderName);
   }
 
-  const filePath = path.join(folderName, `text_${index + 1}.txt`);
+  const filePath = path.join(folderName, `text_${Date.now()}.txt`);
   fs.writeFileSync(filePath, text, "utf8");
-  console.log(`Zapisano plik: ${filePath}`);
+  console.log(`Saved file: ${filePath}`);
 }
 
 async function processTexts(texts : string[]) {
@@ -60,9 +60,9 @@ async function processTexts(texts : string[]) {
       const classification = await classifyText(text);
       console.log(`Class: ${classification}`);
       
-      saveTextToFile(text, classification, i);
+      saveTextToFile(text, classification);
     } catch (error) {
-      console.error(`Błąd podczas przetwarzania tekstu "${text}":`, error);
+      console.error(`Processing error "${text}":`, error);
     }
   }
 }
@@ -77,7 +77,9 @@ let nextPage : string | undefined = "";
 
 let postsArray: string[] = [];
 
-let postsToDownload = 20000;
+let postsToDownload = process.env.POSTS_TO_DOWNLOAD;
+
+console.log(postsToDownload);
 
 while(postsToDownload > 0){
     const { data } = await agent.app.bsky.feed.getFeed(
@@ -88,7 +90,7 @@ while(postsToDownload > 0){
         },
         {
           headers: {
-            "Accept-Language": "pl,en",
+            "Accept-Language": process.env.BLUESKY_ACCEPTLANGUAGE,
           },
         },
       );
@@ -101,9 +103,10 @@ while(postsToDownload > 0){
       nextPage = data.cursor;
 }
 
-processTexts(postsArray).then(() => {
+let uniquePosts = postsArray.filter((n, i) => postsArray.indexOf(n) === i);
+
+processTexts(uniquePosts).then(() => {
   console.log("Process completed!");
 }).catch((error) => {
   console.error("Error:", error);
 });
-
