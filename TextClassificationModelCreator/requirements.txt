@@ -1,0 +1,2 @@
+tensorflow==2.13.0  # Ensure compatibility with the script's features
+matplotlib==3.8.0   # For plotting training metrics
