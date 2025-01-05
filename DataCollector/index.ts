@@ -77,14 +77,17 @@ let nextPage : string | undefined = "";
 
 let postsArray: string[] = [];
 
-let postsToDownload = process.env.POSTS_TO_DOWNLOAD;
+let feeds = process.env.BLUESKY_FEED.split(',');
 
-console.log(postsToDownload);
+console.log(feeds);
 
-while(postsToDownload > 0){
+for (let i = 0; i < feeds.length; i++) {
+  let postsToDownload = process.env.POSTS_TO_DOWNLOAD;
+
+  while(postsToDownload > 0){
     const { data } = await agent.app.bsky.feed.getFeed(
         {
-          feed: process.env.BLUESKY_FEED,
+          feed: feeds[i],
           limit: 100,
           cursor: nextPage,
         },
@@ -101,6 +104,7 @@ while(postsToDownload > 0){
         });
       postsToDownload-=100;
       nextPage = data.cursor;
+  }
 }
 
 let uniquePosts = postsArray.filter((n, i) => postsArray.indexOf(n) === i);
